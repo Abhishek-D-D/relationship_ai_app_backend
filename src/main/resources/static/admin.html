@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoupleSpace AI - Admin Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --primary: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .data-section {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .data-section h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .error {
+            color: #ef4444;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CoupleSpace AI Dashboard</h1>
+            <div id="last-updated" style="color: var(--text-muted)">Loading...</div>
+        </div>
+
+        <div id="error-message" class="error"></div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Registered Users</div>
+                <div id="total-users" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Couple Spaces</div>
+                <div id="total-couples" class="stat-value">-</div>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <h2>Recent Users</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Partner Linked</th>
+                        <th>Joined At</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr><td colspan="5" class="loading">Fetching data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/admin';
+
+        async function fetchDashboardData() {
+            try {
+                // Fetch Stats
+                const statsRes = await fetch(`${API_BASE}/stats`);
+                if (!statsRes.ok) throw new Error('Failed to fetch stats');
+                const stats = await statsRes.json();
+                
+                document.getElementById('total-users').textContent = stats.totalUsers;
+                document.getElementById('total-couples').textContent = stats.totalCouples;
+
+                // Fetch Users
+                const usersRes = await fetch(`${API_BASE}/users`);
+                if (!usersRes.ok) throw new Error('Failed to fetch users');
+                const users = await usersRes.json();
+
+                renderUsers(users);
+
+                // Update timestamps
+                document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                document.getElementById('error-message').style.display = 'none';
+            } catch (err) {
+                const errorEl = document.getElementById('error-message');
+                errorEl.textContent = `Error connecting to backend: ${err.message}`;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No users found.</td></tr>';
+                return;
+            }
+
+            // Sort by createdAt descending and show top 50
+            const sortedUsers = users.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 50);
+
+            sortedUsers.forEach(user => {
+                const tr = document.createElement('tr');
+                
+                const isLinked = user.coupleId ? '<span style="color:#10b981">Yes</span>' : '<span style="color:#ef4444">No</span>';
+                const date = new Date(user.createdAt).toLocaleDateString();
+
+                tr.innerHTML = `
+                    <td style="font-family:monospace;font-size:0.9em;color:var(--text-muted)">${user.userId.substring(0,8)}...</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${isLinked}</td>
+                    <td>${date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize and refresh every 30 seconds
+        fetchDashboardData();
+        setInterval(fetchDashboardData, 30000);
+    </script>
+</body>
+</html>
