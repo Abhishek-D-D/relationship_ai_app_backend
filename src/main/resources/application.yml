@@ -3,9 +3,9 @@ spring:
     name: couplespace-backend
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:couplespace}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${PGHOST:${DB_HOST:localhost}}:${PGPORT:${DB_PORT:5432}}/${PGDATABASE:${DB_NAME:couplespace}}
+    username: ${PGUSER:${DB_USER:postgres}}
+    password: ${PGPASSWORD:${DB_PASSWORD:postgres}}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -26,9 +26,9 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      host: ${REDISHOST:${REDIS_HOST:localhost}}
+      port: ${REDISPORT:${REDIS_PORT:6379}}
+      password: ${REDISPASSWORD:${REDIS_PASSWORD:}}
 
   jackson:
     default-property-inclusion: non_null
