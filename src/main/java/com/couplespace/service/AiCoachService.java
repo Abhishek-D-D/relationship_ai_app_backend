@@ -7,6 +7,8 @@ import com.couplespace.repository.AiInsightRepository;
 import com.couplespace.repository.RelationshipMetricsRepository;
 import com.couplespace.repository.PartnerPersonaRepository;
 import com.couplespace.repository.AiCoachMessageRepository;
+import com.couplespace.repository.OnboardingResponseRepository;
+import com.couplespace.repository.OnboardingQuestionRepository;
 import com.couplespace.entity.AiCoachMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
