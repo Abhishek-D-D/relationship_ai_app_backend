@@ -11,7 +11,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
+import org.springframework.security.core.Authentication;
+import com.couplespace.entity.User;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,13 +30,16 @@ public class ChatWebSocketController {
      * Payload: { "content": "Hello!", "messageType": "TEXT", "mediaUrl": null }
      */
     @MessageMapping("/chat.send")
-    public void handleMessage(@Payload Map<String, String> payload, Principal principal) {
+    public void handleMessage(@Payload Map<String, String> payload, Authentication authentication) {
         try {
-            UUID senderId  = UUID.fromString(principal.getName());
-            UUID coupleId  = coupleService.getCoupleIdForUser(senderId);
+            User user = (User) authentication.getPrincipal();
+            UUID senderId = user.getUserId();
+            UUID coupleId = coupleService.getCoupleIdForUser(senderId);
             String content = payload.get("content");
             String typeStr = payload.getOrDefault("messageType", "TEXT");
-            String mediaUrl= payload.get("mediaUrl");
+            String mediaUrl = payload.get("mediaUrl");
+
+            log.info("Received message from user {}: {}", senderId, content);
 
             Message.MessageType type;
             try {
@@ -48,6 +52,7 @@ public class ChatWebSocketController {
 
             // Broadcast to all subscribers of the couple's topic
             messagingTemplate.convertAndSend("/topic/messages/" + coupleId, saved);
+            log.info("Broadcasted message to /topic/messages/{}", coupleId);
 
         } catch (Exception e) {
             log.error("Failed to handle WS message: {}", e.getMessage());
@@ -59,16 +64,16 @@ public class ChatWebSocketController {
      * Payload: { "isTyping": "true" }
      */
     @MessageMapping("/chat.typing")
-    public void handleTyping(@Payload Map<String, String> payload, Principal principal) {
+    public void handleTyping(@Payload Map<String, String> payload, Authentication authentication) {
         try {
-            UUID senderId = UUID.fromString(principal.getName());
+            User user = (User) authentication.getPrincipal();
+            UUID senderId = user.getUserId();
             UUID coupleId = coupleService.getCoupleIdForUser(senderId);
             boolean isTyping = Boolean.parseBoolean(payload.getOrDefault("isTyping", "true"));
 
             messagingTemplate.convertAndSend(
-                "/topic/typing/" + coupleId,
-                Map.of("userId", senderId.toString(), "isTyping", isTyping)
-            );
+                    "/topic/typing/" + coupleId,
+                    Map.of("userId", senderId.toString(), "isTyping", isTyping));
         } catch (Exception e) {
             log.error("Typing event error: {}", e.getMessage());
         }
@@ -79,16 +84,16 @@ public class ChatWebSocketController {
      * Payload: { "status": "online" }
      */
     @MessageMapping("/chat.presence")
-    public void handlePresence(@Payload Map<String, String> payload, Principal principal) {
+    public void handlePresence(@Payload Map<String, String> payload, Authentication authentication) {
         try {
-            UUID senderId = UUID.fromString(principal.getName());
+            User user = (User) authentication.getPrincipal();
+            UUID senderId = user.getUserId();
             UUID coupleId = coupleService.getCoupleIdForUser(senderId);
             String status = payload.getOrDefault("status", "online");
 
             messagingTemplate.convertAndSend(
-                "/topic/presence/" + coupleId,
-                Map.of("userId", senderId.toString(), "status", status)
-            );
+                    "/topic/presence/" + coupleId,
+                    Map.of("userId", senderId.toString(), "status", status));
         } catch (Exception e) {
             log.error("Presence event error: {}", e.getMessage());
         }
