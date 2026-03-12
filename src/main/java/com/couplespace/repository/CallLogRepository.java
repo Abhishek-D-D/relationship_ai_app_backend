@@ -11,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface CallLogRepository extends JpaRepository<CallLog, UUID> {
     List<CallLog> findByCoupleIdAndStartedAtBetween(UUID coupleId, LocalDateTime start, LocalDateTime end);
+
+    void deleteByInitiatorId(UUID initiatorId);
 }

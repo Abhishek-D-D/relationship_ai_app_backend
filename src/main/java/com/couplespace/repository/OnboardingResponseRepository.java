@@ -12,4 +12,6 @@ public interface OnboardingResponseRepository extends JpaRepository<OnboardingRe
     List<OnboardingResponse> findByCoupleId(UUID coupleId);
 
     List<OnboardingResponse> findByUserId(UUID userId);
+
+    void deleteByUserId(UUID userId);
 }

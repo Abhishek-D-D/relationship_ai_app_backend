@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface AiCoachMessageRepository extends JpaRepository<AiCoachMessage, UUID> {
     List<AiCoachMessage> findTop20ByCoupleIdOrderByCreatedAtAsc(UUID coupleId);
+
+    void deleteBySenderId(UUID senderId);
 }

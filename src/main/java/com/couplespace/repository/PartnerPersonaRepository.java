@@ -13,4 +13,6 @@ public interface PartnerPersonaRepository extends JpaRepository<PartnerPersona, 
     Optional<PartnerPersona> findByUserId(UUID userId);
 
     List<PartnerPersona> findByCoupleId(UUID coupleId);
+
+    void deleteByUserId(UUID userId);
 }

@@ -19,14 +19,16 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     Page<Message> findByCoupleIdOrderByCreatedAtDesc(UUID coupleId, Pageable pageable);
 
     List<Message> findByCoupleIdAndCreatedAtBetween(
-        UUID coupleId, LocalDateTime start, LocalDateTime end);
+            UUID coupleId, LocalDateTime start, LocalDateTime end);
 
     long countByCoupleIdAndIsReadFalseAndSenderIdNot(UUID coupleId, UUID senderId);
 
     @Modifying
     @Query("UPDATE Message m SET m.isRead = true, m.readAt = :now " +
-           "WHERE m.coupleId = :coupleId AND m.senderId != :readerId AND m.isRead = false")
+            "WHERE m.coupleId = :coupleId AND m.senderId != :readerId AND m.isRead = false")
     int markAllAsRead(@Param("coupleId") UUID coupleId,
-                      @Param("readerId") UUID readerId,
-                      @Param("now") LocalDateTime now);
+            @Param("readerId") UUID readerId,
+            @Param("now") LocalDateTime now);
+
+    void deleteBySenderId(UUID senderId);
 }
