@@ -45,14 +45,18 @@ public class ChatWebSocketController {
             try {
                 type = Message.MessageType.valueOf(typeStr);
             } catch (IllegalArgumentException e) {
+                log.warn("Invalid message type {}, defaulting to TEXT", typeStr);
                 type = Message.MessageType.TEXT;
             }
 
             MessageDto saved = messageService.saveMessage(coupleId, senderId, content, type, mediaUrl);
+            log.info("Saved message to DB. ID: {}", saved.getMessageId());
 
             // Broadcast to all subscribers of the couple's topic
-            messagingTemplate.convertAndSend("/topic/messages/" + coupleId, saved);
-            log.info("Broadcasted message to /topic/messages/{}", coupleId);
+            String destination = "/topic/messages/" + coupleId;
+            log.info("Attempting to broadcast message to destination: {}", destination);
+            messagingTemplate.convertAndSend(destination, saved);
+            log.info("Successfully sent broadcast to SimpMessagingTemplate.");
 
         } catch (Exception e) {
             log.error("Failed to handle WS message: {}", e.getMessage());
