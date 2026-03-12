@@ -11,8 +11,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "relationship_metrics")
-@Getter @Setter @Builder
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RelationshipMetrics {
 
     @Id
@@ -44,6 +47,14 @@ public class RelationshipMetrics {
     @Column(name = "positive_score")
     @Builder.Default
     private int positiveScore = 50;
+
+    @Column(name = "call_count")
+    @Builder.Default
+    private int callCount = 0;
+
+    @Column(name = "total_call_minutes")
+    @Builder.Default
+    private int totalCallMinutes = 0;
 
     @CreationTimestamp
     @Column(name = "computed_at", updatable = false)
