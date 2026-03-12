@@ -141,6 +141,12 @@ public class RelationshipAnalysisService {
                 Math.min(100, freqScore + responseScore + posPoints - conflictPenalty + callBonus + 10));
     }
 
+    public int calculateVibeMatch(UUID coupleId) {
+        // Logic to compare onboarding responses and return a match score
+        // For now, return a placeholder that we'll calculate based on actual data
+        return 85;
+    }
+
     private double computeAvgResponseTime(List<com.couplespace.entity.Message> messages) {
         if (messages.size() < 2)
             return 0;

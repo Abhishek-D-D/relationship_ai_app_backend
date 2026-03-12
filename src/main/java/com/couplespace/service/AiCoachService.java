@@ -41,6 +41,8 @@ public class AiCoachService {
     private final RelationshipMetricsRepository metricsRepository;
     private final PartnerPersonaRepository personaRepository;
     private final AiCoachMessageRepository coachMessageRepository;
+    private final OnboardingResponseRepository onboardingResponseRepository;
+    private final OnboardingQuestionRepository onboardingQuestionRepository;
 
     public String chat(UUID coupleId, UUID userId, String userMessage) {
         // Save user message
@@ -72,8 +74,17 @@ public class AiCoachService {
             contextBuilder.append("\n=== Partner Persona (").append(persona.getUserId()).append(") ===\n");
             contextBuilder.append("Style: ").append(persona.getCommunicationStyle()).append("\n");
             contextBuilder.append("Primary Love Language: ").append(persona.getPrimaryLoveLanguage()).append("\n");
-            contextBuilder.append("Traits: ").append(persona.getTraits()).append("\n");
             contextBuilder.append("Aura: ").append(persona.getAura()).append("\n");
+        });
+
+        // Add Onboarding Context
+        contextBuilder.append("\n=== Initial Vibe Check (Onboarding) ===\n");
+        onboardingResponseRepository.findByCoupleId(coupleId).forEach(resp -> {
+            onboardingQuestionRepository.findById(resp.getQuestionId()).ifPresent(q -> {
+                contextBuilder.append("Q: ").append(q.getQuestionText()).append("\n");
+                contextBuilder.append("A: (Partner ").append(resp.getUserId()).append("): ")
+                        .append(resp.getAnswerText()).append("\n");
+            });
         });
 
         // Add history
