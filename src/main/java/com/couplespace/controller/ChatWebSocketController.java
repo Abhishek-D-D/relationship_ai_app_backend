@@ -50,7 +50,7 @@ public class ChatWebSocketController {
             }
 
             MessageDto saved = messageService.saveMessage(coupleId, senderId, content, type, mediaUrl);
-            log.info("Saved message to DB. ID: {}", saved.getMessageId());
+            log.info("Saved message to DB. ID: {}", saved.messageId());
 
             // Broadcast to all subscribers of the couple's topic
             String destination = "/topic/messages/" + coupleId;
