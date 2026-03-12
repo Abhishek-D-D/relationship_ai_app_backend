@@ -34,12 +34,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login").permitAll()
-                        .requestMatchers("/api/v1/ws/**").permitAll() // Allow WebSocket handshake
+                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger
-                        .requestMatchers("/admin.html", "/api/v1/admin/**").permitAll() // Admin dashboard
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers("/admin.html", "/admin/**").permitAll() // Admin dashboard
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

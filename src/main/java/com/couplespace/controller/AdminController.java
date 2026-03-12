@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -27,7 +27,7 @@ public class AdminController {
     public ResponseEntity<AdminStatsDto> getStats() {
         long totalUsers = userRepository.count();
         long totalCouples = coupleRepository.count();
-        
+
         return ResponseEntity.ok(AdminStatsDto.builder()
                 .totalUsers(totalUsers)
                 .totalCouples(totalCouples)
@@ -37,12 +37,12 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<List<AdminUserDto>> getAllUsers() {
         List<Couple> allCouples = coupleRepository.findAll();
-        
+
         List<AdminUserDto> users = userRepository.findAll().stream()
                 .map(user -> {
                     boolean isLinked = allCouples.stream()
                             .anyMatch(c -> user.equals(c.getPartner1()) || user.equals(c.getPartner2()));
-                            
+
                     return AdminUserDto.builder()
                             .userId(user.getUserId())
                             .name(user.getName())
@@ -53,7 +53,7 @@ public class AdminController {
                             .build();
                 })
                 .collect(Collectors.toList());
-                
+
         return ResponseEntity.ok(users);
     }
 }
