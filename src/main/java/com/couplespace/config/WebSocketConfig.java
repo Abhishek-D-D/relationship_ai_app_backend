@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtUtil jwtUtil;
@@ -52,18 +53,30 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    log.info("STOMP CONNECT: Authorization header present: {}", (authHeader != null));
+
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String token = authHeader.substring(7);
-                        if (jwtUtil.isTokenValid(token)) {
-                            UUID userId = jwtUtil.extractUserId(token);
-                            userRepository.findById(userId).ifPresent(user -> {
-                                var auth = new UsernamePasswordAuthenticationToken(
-                                        user, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-                                accessor.setUser(auth);
-                            });
+                        try {
+                            if (jwtUtil.isTokenValid(token)) {
+                                UUID userId = jwtUtil.extractUserId(token);
+                                log.info("STOMP CONNECT: Valid token for user: {}", userId);
+                                userRepository.findById(userId).ifPresent(user -> {
+                                    var auth = new UsernamePasswordAuthenticationToken(
+                                            user, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                                    accessor.setUser(auth);
+                                    log.info("STOMP CONNECT: Authentication set for user: {}", user.getEmail());
+                                });
+                            } else {
+                                log.warn("STOMP CONNECT: Invalid token");
+                            }
+                        } catch (Exception e) {
+                            log.error("STOMP CONNECT: Token extraction error: {}", e.getMessage());
                         }
+                    } else {
+                        log.warn("STOMP CONNECT: Missing or invalid Authorization header format");
                     }
                 }
                 return message;

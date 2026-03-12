@@ -32,6 +32,10 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.send")
     public void handleMessage(@Payload Map<String, String> payload, Authentication authentication) {
         try {
+            if (authentication == null) {
+                log.error("Failed to handle WS message: Authentication is null");
+                return;
+            }
             User user = (User) authentication.getPrincipal();
             UUID senderId = user.getUserId();
             UUID coupleId = coupleService.getCoupleIdForUser(senderId);
@@ -70,6 +74,10 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.typing")
     public void handleTyping(@Payload Map<String, String> payload, Authentication authentication) {
         try {
+            if (authentication == null) {
+                log.error("Typing event error: Authentication is null");
+                return;
+            }
             User user = (User) authentication.getPrincipal();
             UUID senderId = user.getUserId();
             UUID coupleId = coupleService.getCoupleIdForUser(senderId);
@@ -90,6 +98,10 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.presence")
     public void handlePresence(@Payload Map<String, String> payload, Authentication authentication) {
         try {
+            if (authentication == null) {
+                log.error("Presence event error: Authentication is null");
+                return;
+            }
             User user = (User) authentication.getPrincipal();
             UUID senderId = user.getUserId();
             UUID coupleId = coupleService.getCoupleIdForUser(senderId);
