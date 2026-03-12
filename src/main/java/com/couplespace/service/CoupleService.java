@@ -64,6 +64,12 @@ public class CoupleService {
                 .orElseThrow(() -> new RuntimeException("No couple found for user"));
     }
 
+    @Transactional(readOnly = true)
+    public Couple getCoupleById(UUID coupleId) {
+        return coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new RuntimeException("Couple not found"));
+    }
+
     private String generateInviteCode() {
         StringBuilder sb = new StringBuilder(8);
         for (int i = 0; i < 8; i++) {

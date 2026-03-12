@@ -190,9 +190,8 @@ public class RelationshipAnalysisService {
     }
 
     private void generatePartnerPersonas(UUID coupleId, List<com.couplespace.entity.Message> messages) {
-        var partners = List.of(
-                coupleService.getCoupleById(coupleId).getPartner1(),
-                coupleService.getCoupleById(coupleId).getPartner2());
+        var couple = coupleService.getCoupleById(coupleId);
+        var partners = List.of(couple.getPartner1(), couple.getPartner2());
 
         for (User partner : partners) {
             if (partner == null)
