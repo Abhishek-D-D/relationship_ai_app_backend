@@ -19,6 +19,7 @@ import java.util.UUID;
 import com.couplespace.security.JwtUtil;
 import com.couplespace.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSocketMessageBroker
