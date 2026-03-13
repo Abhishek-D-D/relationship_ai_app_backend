@@ -1,3 +1,9 @@
+package com.couplespace.service;
+
+import com.couplespace.dto.AuthResponse;
+import com.couplespace.dto.LoginRequest;
+import com.couplespace.dto.RegisterRequest;
+import com.couplespace.entity.User;
 import com.couplespace.repository.*;
 import com.couplespace.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
