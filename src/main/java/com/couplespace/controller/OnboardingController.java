@@ -12,12 +12,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/onboarding")
 @RequiredArgsConstructor
 public class OnboardingController {
+
+    private final OnboardingService onboardingService;
+    private final CoupleService coupleService;
 
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> getStatus(@AuthenticationPrincipal User user) {
