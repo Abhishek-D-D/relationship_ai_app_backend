@@ -19,12 +19,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OnboardingController {
 
-    private final OnboardingService onboardingService;
-    private final CoupleService coupleService;
-
-    @GetMapping("/questions")
-    public ResponseEntity<ApiResponse<List<OnboardingQuestion>>> getQuestions() {
-        return ResponseEntity.ok(ApiResponse.ok(onboardingService.getAllQuestions()));
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> getStatus(@AuthenticationPrincipal User user) {
+        boolean completed = onboardingService.isOnboardingComplete(user.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("completed", completed)));
     }
 
     @PostMapping("/submit")
@@ -32,7 +30,13 @@ public class OnboardingController {
             @AuthenticationPrincipal User user,
             @RequestBody List<OnboardingResponse> responses) {
 
-        UUID coupleId = coupleService.getCoupleIdForUser(user.getUserId());
+        UUID coupleId = null;
+        try {
+            coupleId = coupleService.getCoupleIdForUser(user.getUserId());
+        } catch (Exception e) {
+            // User not in a couple yet, that's fine
+        }
+
         onboardingService.submitResponses(user.getUserId(), coupleId, responses);
 
         return ResponseEntity.ok(ApiResponse.ok("Responses submitted and processed! 💜"));

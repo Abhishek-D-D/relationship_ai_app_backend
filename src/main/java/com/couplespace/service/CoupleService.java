@@ -17,6 +17,7 @@ import java.util.UUID;
 public class CoupleService {
 
     private final CoupleRepository coupleRepository;
+    private final com.couplespace.repository.PartnerPersonaRepository personaRepository;
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -32,7 +33,15 @@ public class CoupleService {
                 .inviteCode(generateInviteCode())
                 .build();
 
-        return CoupleDto.from(coupleRepository.save(couple));
+        Couple savedCouple = coupleRepository.save(couple);
+
+        // Link Persona if exists
+        personaRepository.findByUserId(creator.getUserId()).ifPresent(persona -> {
+            persona.setCoupleId(savedCouple.getCoupleId());
+            personaRepository.save(persona);
+        });
+
+        return CoupleDto.from(savedCouple);
     }
 
     @Transactional
@@ -48,7 +57,15 @@ public class CoupleService {
         }
 
         couple.setPartner2(joiner);
-        return CoupleDto.from(coupleRepository.save(couple));
+        Couple savedCouple = coupleRepository.save(couple);
+
+        // Link Persona if exists
+        personaRepository.findByUserId(joiner.getUserId()).ifPresent(persona -> {
+            persona.setCoupleId(savedCouple.getCoupleId());
+            personaRepository.save(persona);
+        });
+
+        return CoupleDto.from(savedCouple);
     }
 
     @Transactional(readOnly = true)

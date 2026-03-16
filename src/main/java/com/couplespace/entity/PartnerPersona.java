@@ -24,7 +24,7 @@ public class PartnerPersona {
     @Column(name = "user_id", nullable = false, unique = true)
     private UUID userId;
 
-    @Column(name = "couple_id", nullable = false)
+    @Column(name = "couple_id")
     private UUID coupleId;
 
     @Column(name = "communication_style")

@@ -27,6 +27,10 @@ public class OnboardingService {
         return questionRepository.findAll();
     }
 
+    public boolean isOnboardingComplete(UUID userId) {
+        return !responseRepository.findByUserId(userId).isEmpty();
+    }
+
     @Transactional
     public void submitResponses(UUID userId, UUID coupleId, List<OnboardingResponse> responses) {
         responses.forEach(r -> {
@@ -77,13 +81,14 @@ public class OnboardingService {
             String json = openAiService.chatCompletion("Return JSON only.", prompt);
             var node = objectMapper.readTree(extractJson(json));
 
-            PartnerPersona persona = personaRepository.findByCoupleId(coupleId).stream()
-                    .filter(p -> p.getUserId().equals(userId))
-                    .findFirst()
+            PartnerPersona persona = personaRepository.findByUserId(userId)
                     .orElse(PartnerPersona.builder()
                             .userId(userId)
-                            .coupleId(coupleId)
                             .build());
+
+            if (coupleId != null) {
+                persona.setCoupleId(coupleId);
+            }
 
             persona.setCommunicationStyle(
                     node.has("communicationStyle") ? node.get("communicationStyle").asText() : "Balanced");
