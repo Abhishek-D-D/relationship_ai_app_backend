@@ -16,8 +16,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.couplespace.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class TimelineService {
 
     private final MessageRepository messageRepository;
     private final RelationshipMilestoneRepository milestoneRepository;
+    private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
 
@@ -46,12 +49,18 @@ public class TimelineService {
             return;
         }
 
+        // Fetch sender names for context
+        List<UUID> senderIds = messages.stream().map(com.couplespace.entity.Message::getSenderId).distinct().toList();
+        Map<UUID, String> nameMap = userRepository.findAllById(senderIds).stream()
+                .collect(
+                        Collectors.toMap(com.couplespace.entity.User::getUserId, com.couplespace.entity.User::getName));
+
         // Build compact chat log for LLM
         String chatLog = messages.stream()
                 .filter(m -> m.getContent() != null && !m.getContent().isBlank())
                 .map(m -> "[%s] %s: %s".formatted(
                         m.getCreatedAt().toLocalDate(),
-                        m.getSenderName() != null ? m.getSenderName() : "Partner",
+                        nameMap.getOrDefault(m.getSenderId(), "Partner"),
                         m.getContent()))
                 .collect(Collectors.joining("\n"));
 

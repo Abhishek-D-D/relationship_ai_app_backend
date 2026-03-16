@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class OnboardingService {
     private final OnboardingResponseRepository responseRepository;
     private final PartnerPersonaRepository personaRepository;
     private final OpenAiService openAiService;
+    private final ObjectMapper objectMapper;
 
     public List<OnboardingQuestion> getAllQuestions() {
         return questionRepository.findAll();
@@ -73,6 +75,7 @@ public class OnboardingService {
 
         try {
             String json = openAiService.chatCompletion("Return JSON only.", prompt);
+            var node = objectMapper.readTree(extractJson(json));
 
             PartnerPersona persona = personaRepository.findByCoupleId(coupleId).stream()
                     .filter(p -> p.getUserId().equals(userId))
@@ -82,10 +85,12 @@ public class OnboardingService {
                             .coupleId(coupleId)
                             .build());
 
-            persona.setCommunicationStyle(parseValue(json, "communicationStyle"));
-            persona.setPrimaryLoveLanguage(parseValue(json, "primaryLoveLanguage"));
-            persona.setAura(parseValue(json, "aura"));
-            persona.setTraits(parseValue(json, "traits"));
+            persona.setCommunicationStyle(
+                    node.has("communicationStyle") ? node.get("communicationStyle").asText() : "Balanced");
+            persona.setPrimaryLoveLanguage(
+                    node.has("primaryLoveLanguage") ? node.get("primaryLoveLanguage").asText() : "Affirmation");
+            persona.setAura(node.has("aura") ? node.get("aura").asText() : "Warm");
+            persona.setTraits(node.has("traits") ? node.get("traits").asText() : "kind, expressive");
 
             personaRepository.save(persona);
             log.info("Bootstrapped persona for user {}: {}", userId, persona.getAura());
@@ -95,13 +100,14 @@ public class OnboardingService {
         }
     }
 
-    private String parseValue(String json, String key) {
-        try {
-            int start = json.indexOf("\"" + key + "\":") + key.length() + 4;
-            int end = json.indexOf("\"", start);
-            return json.substring(start, end);
-        } catch (Exception e) {
-            return "Unknown";
+    private String extractJson(String text) {
+        if (text == null)
+            return "{}";
+        int start = text.indexOf("{");
+        int end = text.lastIndexOf("}");
+        if (start != -1 && end != -1 && end > start) {
+            return text.substring(start, end + 1);
         }
+        return "{}";
     }
 }
