@@ -23,6 +23,11 @@ public class OnboardingController {
     private final OnboardingService onboardingService;
     private final CoupleService coupleService;
 
+    @GetMapping("/questions")
+    public ResponseEntity<ApiResponse<List<OnboardingQuestion>>> getQuestions() {
+        return ResponseEntity.ok(ApiResponse.ok(onboardingService.getAllQuestions()));
+    }
+
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> getStatus(@AuthenticationPrincipal User user) {
         boolean completed = onboardingService.isOnboardingComplete(user.getUserId());
