@@ -37,7 +37,11 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger
-                        .requestMatchers("/admin.html", "/admin/**").permitAll() // Admin dashboard
+                                                                                                              // (usually
+                                                                                                              // restricted
+                                                                                                              // in
+                                                                                                              // prod)
+                        .requestMatchers("/admin.html", "/admin/**").authenticated() // Secured admin dashboard
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -51,7 +55,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        // [PRODUCTION] Replace with actual frontend domains (e.g.
+        // https://app.couplespace.ai)
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "https://couplespace.ai",
+                "https://*.couplespace.ai"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

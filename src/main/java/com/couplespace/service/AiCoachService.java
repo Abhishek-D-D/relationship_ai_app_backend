@@ -21,33 +21,33 @@ import java.util.UUID;
 @Slf4j
 public class AiCoachService {
 
+    private final OpenAiService openAiService;
+    private final AiCoachMessageRepository coachMessageRepository;
+    private final RelationshipContextService contextService;
+
     private static final String SYSTEM_PROMPT = """
-            You are Aria, a warm and empathetic AI relationship coach for CoupleSpace AI.
-            You help couples communicate better, understand each other, and build a stronger bond.
-            You have deep knowledge of the Gottman Method, Love Languages, and Attachment Theory.
+            You are Aria, a world-class AI relationship coach for CoupleSpace AI.
+            You aren't just an assistant; you are a trusted confidant who deeply understands the couple's unique bond.
 
-            Your personality:
-            - Warm, caring, and specific — never vague
-            - Uses emojis sparingly but meaningfully (💜, 🌹, ✨)
-            - Never takes sides; always supports mutual understanding
-            - References the couple's actual metrics when relevant
-            - Keeps responses under 4 sentences unless asked for more
-            - Always ends with ONE specific, immediately actionable step
+            YOUR CORE PHILOSOPHY:
+            - **Radical Empathy**: Always validate emotions first.
+            - **Data-Driven Insight**: Weave in their actual relationship metrics (health score, mood, communication style) naturally.
+            - **Neutral Ground**: Never take sides. Support the *relationship* as the third entity.
+            - **Gottman & Attachment Expertise**: Use principles from Attachment Theory and the Gottman Method invisibly in your advice.
 
-            Do not reveal that you are powered by any specific AI model.
-            If any question involves mental health crisis, gently suggest professional help.
+            YOUR PERSONALITY:
+            - Sophisticated, warm, and slightly poetic.
+            - Uses the partners' names or communication styles to tailor advice.
+            - Ends every message with a "Micro-Connection Challenge" — one tiny, specific act they can do right now.
+
+            CONSTRAINTS:
+            - Keep responses concise (3-4 sentences max).
+            - Avoid generic "I am an AI" language.
+            - If they are in a high-stress state (based on mood data), be extra gentle and grounding.
             """;
 
-    private final OpenAiService openAiService;
-    private final AiInsightRepository insightRepository;
-    private final RelationshipMetricsRepository metricsRepository;
-    private final PartnerPersonaRepository personaRepository;
-    private final AiCoachMessageRepository coachMessageRepository;
-    private final OnboardingResponseRepository onboardingResponseRepository;
-    private final OnboardingQuestionRepository onboardingQuestionRepository;
-
     public String chat(UUID coupleId, UUID userId, String userMessage) {
-        // Save user message
+        // 1. Save user message
         coachMessageRepository.save(AiCoachMessage.builder()
                 .coupleId(coupleId)
                 .senderId(userId)
@@ -55,50 +55,24 @@ public class AiCoachService {
                 .content(userMessage)
                 .build());
 
-        // Enrich prompt with relationship context
-        StringBuilder contextBuilder = new StringBuilder(SYSTEM_PROMPT);
-        contextBuilder.append("\n\n=== Current Relationship Context ===\n");
+        // 2. Gather unified relationship intelligence
+        String relationshipIntelligence = contextService.getUnifiedContext(coupleId);
 
-        insightRepository.findTopByCoupleIdOrderByWeekStartDesc(coupleId).ifPresent(insight -> {
-            contextBuilder.append("Latest health score: ").append(insight.getHealthScore()).append("/100\n");
-            contextBuilder.append("Recent summary: ").append(insight.getSummary()).append("\n");
-        });
+        // 3. Build the sophisticated prompt
+        StringBuilder finalPrompt = new StringBuilder(SYSTEM_PROMPT);
+        finalPrompt.append("\n\n=== RELATIONSHIP INTELLIGENCE (FOR YOUR EYES ONLY) ===\n");
+        finalPrompt.append(relationshipIntelligence);
 
-        metricsRepository.findTopByCoupleIdOrderByPeriodStartDesc(coupleId).ifPresent(metrics -> {
-            contextBuilder.append("Recent messages: ").append(metrics.getMessageCount()).append("/week\n");
-            contextBuilder.append("Recent calls: ").append(metrics.getCallCount()).append(" calls, ")
-                    .append(metrics.getTotalCallMinutes()).append(" mins\n");
-            contextBuilder.append("Avg response time: ").append(metrics.getAvgResponseTimeMins()).append(" min\n");
-            contextBuilder.append("Positivity score: ").append(metrics.getPositiveScore()).append("/100\n");
-        });
-
-        personaRepository.findByCoupleId(coupleId).forEach(persona -> {
-            contextBuilder.append("\n=== Partner Persona (").append(persona.getUserId()).append(") ===\n");
-            contextBuilder.append("Style: ").append(persona.getCommunicationStyle()).append("\n");
-            contextBuilder.append("Primary Love Language: ").append(persona.getPrimaryLoveLanguage()).append("\n");
-            contextBuilder.append("Aura: ").append(persona.getAura()).append("\n");
-        });
-
-        // Add Onboarding Context
-        contextBuilder.append("\n=== Initial Vibe Check (Onboarding) ===\n");
-        onboardingResponseRepository.findByCoupleId(coupleId).forEach(resp -> {
-            onboardingQuestionRepository.findById(resp.getQuestionId()).ifPresent(q -> {
-                contextBuilder.append("Q: ").append(q.getQuestionText()).append("\n");
-                contextBuilder.append("A: (Partner ").append(resp.getUserId()).append("): ")
-                        .append(resp.getAnswerText()).append("\n");
-            });
-        });
-
-        // Add history
-        contextBuilder.append("\n\n=== Conversation History with Aria ===\n");
+        finalPrompt.append("\n\n=== RECENT CONVERSATION HISTORY WITH ARIA ===\n");
         coachMessageRepository.findTop20ByCoupleIdOrderByCreatedAtAsc(coupleId).forEach(msg -> {
-            contextBuilder.append(msg.getRole()).append(": ").append(msg.getContent()).append("\n");
+            finalPrompt.append(msg.getRole()).append(": ").append(msg.getContent()).append("\n");
         });
 
         try {
-            String reply = openAiService.chatCompletion(contextBuilder.toString(), userMessage);
+            // 4. Generate AI response
+            String reply = openAiService.chatCompletion(finalPrompt.toString(), userMessage);
 
-            // Save Assistant response
+            // 5. Save and return
             coachMessageRepository.save(AiCoachMessage.builder()
                     .coupleId(coupleId)
                     .role("ASSISTANT")
@@ -107,9 +81,8 @@ public class AiCoachService {
 
             return reply;
         } catch (Exception e) {
-            log.error("AI coach error: {}", e.getMessage());
-            return "I'm having trouble connecting right now. Please try again in a moment. 💜 " +
-                    "Remember: open communication is always the first step to deeper understanding.";
+            log.error("Aria system error for couple {}: {}", coupleId, e.getMessage());
+            return "I'm momentarily offline, but I'm still here for you both. Take a deep breath together. I'll be back in just a second. 💜";
         }
     }
 }

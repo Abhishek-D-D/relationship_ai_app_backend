@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -76,5 +77,12 @@ public class CoupleService {
             sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
         }
         return sb.toString();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Couple> getAllCompleteCouples() {
+        return coupleRepository.findAll().stream()
+                .filter(Couple::isComplete)
+                .toList();
     }
 }
