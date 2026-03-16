@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +39,7 @@ public class TimelineService {
         log.info("Starting timeline extraction for couple {}", coupleId);
 
         // Fetch last 200 messages for rich context
-        var messages = messageRepository.findByCoupleIdOrderByCreatedAtAsc(coupleId, 200);
+        var messages = messageRepository.findByCoupleIdOrderByCreatedAtAsc(coupleId, PageRequest.of(0, 200));
 
         if (messages.size() < 5) {
             log.info("Not enough messages to extract milestones for couple {}", coupleId);
