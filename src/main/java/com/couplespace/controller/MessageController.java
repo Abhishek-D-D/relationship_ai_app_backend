@@ -46,4 +46,40 @@ public class MessageController {
         long count = messageService.getUnreadCount(coupleId, user.getUserId());
         return ResponseEntity.ok(ApiResponse.ok(count));
     }
+
+    @PostMapping("/{messageId}/react")
+    public ResponseEntity<ApiResponse<MessageDto>> reactToMessage(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID messageId,
+            @RequestBody Map<String, String> body) {
+        String emoji = body.get("emoji");
+        MessageDto updated = messageService.reactToMessage(messageId, user.getUserId(), emoji);
+        return ResponseEntity.ok(ApiResponse.ok(updated));
+    }
+
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<ApiResponse<MessageDto>> deleteMessage(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID messageId,
+            @RequestParam(defaultValue = "false") boolean forEveryone) {
+        MessageDto updated = messageService.deleteMessage(messageId, user.getUserId(), forEveryone);
+        return ResponseEntity.ok(ApiResponse.ok(updated));
+    }
+
+    @PutMapping("/{messageId}/star")
+    public ResponseEntity<ApiResponse<MessageDto>> starMessage(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID messageId) {
+        MessageDto updated = messageService.starMessage(messageId, user.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(updated));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<MessageDto>>> searchMessages(
+            @AuthenticationPrincipal User user,
+            @RequestParam String q) {
+        UUID coupleId = coupleService.getCoupleIdForUser(user.getUserId());
+        List<MessageDto> results = messageService.searchMessages(coupleId, q);
+        return ResponseEntity.ok(ApiResponse.ok(results));
+    }
 }
