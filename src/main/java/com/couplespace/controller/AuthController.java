@@ -4,6 +4,8 @@ import com.couplespace.dto.ApiResponse;
 import com.couplespace.dto.AuthResponse;
 import com.couplespace.dto.LoginRequest;
 import com.couplespace.dto.RegisterRequest;
+import com.couplespace.dto.ForgotPasswordRequest;
+import com.couplespace.dto.ResetPasswordRequest;
 import com.couplespace.entity.User;
 import com.couplespace.service.AuthService;
 import jakarta.validation.Valid;
@@ -33,6 +35,20 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.ok("Login successful", response));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.processForgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.ok("If your email is registered, you will receive a reset code."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.ok("Password has been reset successfully."));
     }
 
     @DeleteMapping("/account")

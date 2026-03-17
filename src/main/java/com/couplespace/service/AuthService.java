@@ -3,6 +3,8 @@ package com.couplespace.service;
 import com.couplespace.dto.AuthResponse;
 import com.couplespace.dto.LoginRequest;
 import com.couplespace.dto.RegisterRequest;
+import com.couplespace.dto.ForgotPasswordRequest;
+import com.couplespace.dto.ResetPasswordRequest;
 import com.couplespace.entity.User;
 import com.couplespace.repository.*;
 import com.couplespace.security.JwtUtil;
@@ -55,6 +57,42 @@ public class AuthService {
         String access = jwtUtil.generateAccessToken(user.getUserId(), user.getEmail());
         String refresh = jwtUtil.generateRefreshToken(user.getUserId());
         return new AuthResponse(access, refresh, AuthResponse.UserDto.from(user));
+    }
+
+    @Transactional
+    public void processForgotPassword(ForgotPasswordRequest request) {
+        // We throw a generic message even if email doesn't exist to prevent enumeration
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new RuntimeException("If an account exists, a reset code has been sent."));
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        user.setResetToken(otp);
+        user.setResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
+
+        // DEBUG: In production, this goes to email
+        System.out.println("\n************************************************");
+        System.out.println("OTP FOR " + request.email() + " : " + otp);
+        System.out.println("************************************************\n");
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new RuntimeException("Invalid reset attempt"));
+
+        if (user.getResetToken() == null || !user.getResetToken().equals(request.token())) {
+            throw new RuntimeException("Invalid reset token");
+        }
+
+        if (user.getResetTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("Reset token expired");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
     }
 
     @Transactional
