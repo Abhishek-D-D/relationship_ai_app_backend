@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/auth/login", "/auth/forgot-password",
-                                "/auth/reset-password")
+                                "/auth/reset-password", "/media/**")
                         .permitAll()
                         .requestMatchers("/onboarding/questions").permitAll()
                         .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
