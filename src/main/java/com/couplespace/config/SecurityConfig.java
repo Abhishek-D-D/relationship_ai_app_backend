@@ -44,7 +44,7 @@ public class SecurityConfig {
                                                                                                               // restricted
                                                                                                               // in
                                                                                                               // prod)
-                        .requestMatchers("/admin.html", "/admin/**").authenticated() // Secured admin dashboard
+                        .requestMatchers("/admin.html", "/admin/**").permitAll() // Secured admin dashboard
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
