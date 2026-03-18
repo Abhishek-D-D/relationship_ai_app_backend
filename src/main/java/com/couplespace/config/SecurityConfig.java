@@ -62,6 +62,8 @@ public class SecurityConfig {
         // https://app.couplespace.ai)
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
+                "https://radhely.com",
+                "https://*.radhely.com",
                 "https://couplespace.ai",
                 "https://*.couplespace.ai"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
