@@ -12,7 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -35,6 +35,12 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  # Increase multipart limits for media uploads (images, voice notes, videos)
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+
 server:
   port: ${PORT:8080}
   servlet:
@@ -47,18 +53,18 @@ jwt:
   refresh-token-expiry-ms: 2592000000  # 30 days
 
 openai:
-  # ⬇️  PASTE YOUR API KEY HERE for local testing (replace the text below)
   api-key: ${OPENAI_API_KEY:sk-PASTE-YOUR-KEY-HERE}
-  model: ${OPENAI_MODEL:gpt-4o-mini}   # cheapest model — ~$0.0002 per call
-  max-tokens: 600                        # kept small to reduce cost
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+  max-tokens: 600
   base-url: https://api.openai.com/v1
 
-aws:
-  s3:
-    bucket: ${S3_BUCKET:couplespace-media}
-    region: ${AWS_REGION:ap-south-1}
-    access-key: ${AWS_ACCESS_KEY:}
-    secret-key: ${AWS_SECRET_KEY:}
+# ─── Cloudinary Media Storage ────────────────────────────────────────────────
+# On Railway: add env vars CLOUDINARY_CLOUD_NAME and CLOUDINARY_UPLOAD_PRESET
+# Create a FREE account at cloudinary.com → Settings → Upload → Add upload preset
+# Set the preset to "Unsigned" mode
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  upload-preset: ${CLOUDINARY_UPLOAD_PRESET:ml_default}
 
 logging:
   level:
@@ -73,6 +79,4 @@ management:
         include: health,info
 
 app:
-  upload:
-    dir: uploads
-  base-url: https://relationshipaiappbackend-production.up.railway.app
+  base-url: ${APP_BASE_URL:https://relationshipaiappbackend-production.up.railway.app}
