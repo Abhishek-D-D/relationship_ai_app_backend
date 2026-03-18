@@ -61,8 +61,8 @@ public class AiCoachService {
         
         // 2b. Get a peek into their recent main chat conversations
         StringBuilder coupleChatSnippet = new StringBuilder();
-        messageRepository.findTop20ByCoupleIdOrderByCreatedAtDesc(coupleId, 
-            org.springframework.data.domain.PageRequest.of(0, 15))
+        messageRepository.findByCoupleIdOrderByCreatedAtDesc(coupleId, 
+            PageRequest.of(0, 15))
             .getContent().stream().sorted((a,b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
             .forEach(m -> {
                 if (m.getContent() != null && !m.getContent().isEmpty()) {
