@@ -226,4 +226,33 @@ public class ChatWebSocketController {
             log.error("Delivered event error: {}", e.getMessage());
         }
     }
+
+    /**
+     * Real-time Call Signaling
+     * Client sends to: /app/chat.call
+     * Payload: {
+     *   "type": "CALL_INVITE" | "CALL_ACCEPT" | "CALL_REJECT" | "CALL_HANGUP",
+     *   "callType": "VOICE" | "VIDEO",
+     *   "channelName": "couple-uuid",
+     *   "callerId": "uuid",
+     *   "callerName": "Name"
+     * }
+     */
+    @MessageMapping("/chat.call")
+    public void handleCallSignal(@Payload Map<String, String> payload, Authentication authentication) {
+        try {
+            if (authentication == null) return;
+            User user = (User) authentication.getPrincipal();
+            UUID coupleId = coupleService.getCoupleIdForUser(user.getUserId());
+            
+            log.info("Call Signal: {} from user {} for couple {}", 
+                     payload.get("type"), user.getUserId(), coupleId);
+
+            // Broadcast to the couple's call topic
+            messagingTemplate.convertAndSend("/topic/calls/" + coupleId, payload);
+            
+        } catch (Exception e) {
+            log.error("Call signaling error: {}", e.getMessage());
+        }
+    }
 }
