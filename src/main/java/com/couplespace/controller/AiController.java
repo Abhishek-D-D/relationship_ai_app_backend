@@ -45,9 +45,8 @@ public class AiController {
     @GetMapping("/coach/history")
     public ResponseEntity<ApiResponse<java.util.List<AiCoachMessage>>> getCoachHistory(
             @AuthenticationPrincipal User user) {
-        UUID coupleId = coupleService.getCoupleIdForUser(user.getUserId());
         return ResponseEntity
-                .ok(ApiResponse.ok(coachMessageRepository.findTop20ByCoupleIdOrderByCreatedAtAsc(coupleId)));
+                .ok(ApiResponse.ok(coachMessageRepository.findTop20ByUserIdOrderByCreatedAtAsc(user.getUserId())));
     }
 
     @GetMapping("/insights/latest")
