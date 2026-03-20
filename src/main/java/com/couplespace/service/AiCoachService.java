@@ -50,14 +50,15 @@ public class AiCoachService {
         User user = userRepository.findById(userId).orElse(null);
         Couple couple = coupleService.getCoupleById(coupleId);
         
-        String userName = (user != null) ? user.getName() : "Friend";
-        String partnerName = "your partner";
+        final String userName = (user != null) ? user.getName() : "Friend";
+        String pName = "your partner";
         
         if (couple.getPartner1() != null && !couple.getPartner1().getUserId().equals(userId)) {
-            partnerName = couple.getPartner1().getName();
+            pName = couple.getPartner1().getName();
         } else if (couple.getPartner2() != null && !couple.getPartner2().getUserId().equals(userId)) {
-            partnerName = couple.getPartner2().getName();
+            pName = couple.getPartner2().getName();
         }
+        final String partnerName = pName;
 
         // 1. Save user message
         coachMessageRepository.save(AiCoachMessage.builder()
