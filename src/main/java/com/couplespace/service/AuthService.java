@@ -124,7 +124,7 @@ public class AuthService {
         messageRepository.deleteBySenderId(userId);
         callLogRepository.deleteByInitiatorId(userId);
         personaRepository.deleteByUserId(userId);
-        coachMessageRepository.deleteBySenderId(userId);
+        coachMessageRepository.deleteByUserId(userId);
         onboardingResponseRepository.deleteByUserId(userId);
 
         // 3. Delete User Record
