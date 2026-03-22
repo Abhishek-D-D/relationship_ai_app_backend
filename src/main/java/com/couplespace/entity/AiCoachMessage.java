@@ -23,7 +23,6 @@ public class AiCoachMessage {
     @Column(nullable = false)
     private UUID coupleId;
 
-    @Column(nullable = false)
     private UUID userId; // The user who "owns" this chat thread
 
     private UUID senderId; // Null for AI messages, non-null for user messages
