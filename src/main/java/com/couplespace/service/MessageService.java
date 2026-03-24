@@ -24,6 +24,8 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ChatInsightService chatInsightService;
+    private final CoupleService coupleService;
 
     @Transactional(readOnly = true)
     public List<MessageDto> getMessages(UUID coupleId, int page, int size) {
@@ -99,7 +101,22 @@ public class MessageService {
                 return MessageDto.from(message, senderName, replyContent, replySenderName);
             }
         }
-        return MessageDto.from(message, senderName);
+        MessageDto dto = MessageDto.from(message, senderName);
+
+        // Trigger Aria Insight for the recipient (the other partner)
+        try {
+            com.couplespace.entity.Couple couple = coupleService.getCoupleById(coupleId);
+            if (couple != null && couple.getPartner1() != null && couple.getPartner2() != null) {
+                UUID recipientId = couple.getPartner1().getUserId().equals(senderId) 
+                        ? couple.getPartner2().getUserId() : couple.getPartner1().getUserId();
+                
+                chatInsightService.generateInsightForUser(coupleId, recipientId, message);
+            }
+        } catch (Exception e) {
+            log.warn("Non-blocking failure to trigger Aria insight: {}", e.getMessage());
+        }
+
+        return dto;
     }
 
     @Transactional
