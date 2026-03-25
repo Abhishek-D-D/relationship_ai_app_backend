@@ -29,6 +29,7 @@ public class ChatInsightService {
     private final RelationshipContextService contextService;
     private final ObjectMapper objectMapper;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final ModerationService moderationService;
 
     private static final String INSIGHT_PROMPT = """
             You are Aria, the ultimate relationship coach and 'guardian angel' for the user. 
@@ -50,6 +51,10 @@ public class ChatInsightService {
             
             Keep the tone warm, supportive, and wise. Do not use generic AI language. 
             Be specific to the names provided.
+            
+            SAFETY CONSTRAINTS:
+            - NEVER provide sexualized, harmful, or illegal advice.
+            - If the chat log contains mentions of self-harm or violence, provide a compassionate response suggesting professional help and do not attempt to analyze the conflict further.
             """;
 
     @Async
@@ -85,6 +90,12 @@ public class ChatInsightService {
 
             String aiResponse = openAiService.chatCompletion(finalPrompt, "Generate JSON now.");
             
+            // Moderation check
+            if (moderationService.isHarmful(aiResponse)) {
+                log.warn("Aria insight flagged as harmful for couple {}. Skipping broadcast.", coupleId);
+                return;
+            }
+
             // Extract JSON if AI wrapped it in markdown
             if (aiResponse.contains("```json")) {
                 aiResponse = aiResponse.substring(aiResponse.indexOf("```json") + 7, aiResponse.lastIndexOf("```"));

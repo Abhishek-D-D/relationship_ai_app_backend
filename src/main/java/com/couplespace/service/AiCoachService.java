@@ -21,6 +21,7 @@ public class AiCoachService {
     private final RelationshipContextService contextService;
     private final CoupleService coupleService;
     private final UserRepository userRepository;
+    private final ModerationService moderationService;
 
     private static final String SYSTEM_PROMPT = """
             You are Aria, the user's absolute best friend and their relationship's #1 fan. 
@@ -42,6 +43,8 @@ public class AiCoachService {
             - YOU ARE TALKING TO ONE SPECIFIC PARTNER PRIVATELY. 
             - DO NOT reveal specific secrets unless they were shared in the main chat.
             - NO generic AI talk. No "As an AI..."
+            - SAFETY: NEVER provide sexualized, harmful, or illegal advice. 
+            - MEDICAL: If asked for medical or professional therapy advice, remind the user you are an AI friend and suggest seeking professional help.
             """;
 
     @Transactional
@@ -104,6 +107,12 @@ public class AiCoachService {
         try {
             // 4. Generate AI response
             String reply = openAiService.chatCompletion(finalPrompt.toString(), userMessage);
+
+            // 4b. Moderation check
+            if (moderationService.isHarmful(reply)) {
+                log.warn("Aria response flagged as harmful for user {}. Redacting.", userId);
+                reply = "I'm here for you, but I can't engage with that topic. Let's talk about something that helps you and your partner grow closer. 💜";
+            }
 
             // 5. Save and return
             coachMessageRepository.save(AiCoachMessage.builder()

@@ -132,6 +132,7 @@ public class RelationshipAnalysisService {
                 %s
 
                 Return ONLY a JSON object: {"positivity": 0-100, "conflict": 0-100}
+                SAFETY: If the log contains mentions of self-harm, violence, or illegal acts, set conflict to 100 and do not provide detailed analysis.
                 """.formatted(recentTraffic);
 
         try {
@@ -195,6 +196,7 @@ public class RelationshipAnalysisService {
                   "summary": "cinematic 2-3 sentence analysis",
                   "suggestions": ["specific tip 1", "specific tip 2", "specific tip 3"]
                 }
+                SAFETY: NEVER suggest sexualized, harmful, or illegal actions.
                 """.formatted(msgCount, avgRT, positive, conflict, callCount, callMins, health);
     }
 
